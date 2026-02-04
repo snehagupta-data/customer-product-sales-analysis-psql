@@ -1,7 +1,7 @@
 -- ===========================================================================
 -- Product Report View
 -- ===========================================================================
-CREATE OR REPLACE VIEW gold.product_report AS
+CREATE VIEW gold.product_report AS
 WITH base_query AS (
     SELECT 
         p.product_key,
@@ -26,8 +26,10 @@ product_aggregation AS (
         category,
         subcategory,
         cost,
-        EXTRACT(YEAR FROM AGE(MAX(order_date), MIN(order_date)))*12 +
-        EXTRACT(MONTH FROM AGE(MAX(order_date), MIN(order_date))) + 1 AS lifespan,
+        (EXTRACT(YEAR FROM AGE(MAX(order_date), MIN(order_date))) * 12
+ + EXTRACT(MONTH FROM AGE(MAX(order_date), MIN(order_date)))
+ + CASE WHEN EXTRACT(DAY FROM AGE(MAX(order_date), MIN(order_date))) > 0 THEN 1 ELSE 0 END
+) AS lifespan,
         MAX(order_date) AS last_order_date,
         COUNT(DISTINCT order_number) AS total_orders,
         COUNT(DISTINCT customer_key) AS total_customers,

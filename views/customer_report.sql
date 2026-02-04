@@ -1,7 +1,7 @@
 -- ===========================================================================
 -- Customer Report View
 -- ===========================================================================
-CREATE OR REPLACE VIEW gold.customer_report AS
+CREATE VIEW gold.customer_report AS
 WITH base_query AS (
     SELECT 
         s.order_number,
@@ -29,8 +29,13 @@ customer_aggregation AS (
         SUM(quantity) AS total_quantity_purchased,
         COUNT(DISTINCT product_key) AS total_products,
         MAX(order_date) AS last_order_date,
-        EXTRACT(YEAR FROM AGE(MAX(order_date), MIN(order_date)))*12 +
-        EXTRACT(MONTH FROM AGE(MAX(order_date), MIN(order_date))) + 1 AS lifespan
+		(EXTRACT(YEAR FROM AGE(MAX(order_date), MIN(order_date))) * 12
+ + EXTRACT(MONTH FROM AGE(MAX(order_date), MIN(order_date)))
+ + CASE WHEN EXTRACT(DAY FROM AGE(MAX(order_date), MIN(order_date))) > 0 THEN 1 ELSE 0 END
+) AS lifespan
+
+
+		
     FROM base_query
     GROUP BY customer_key, customer_number, customer_name, customer_age
 )
@@ -58,3 +63,6 @@ SELECT
     CASE WHEN total_orders=0 THEN 0 ELSE total_sales/total_orders END AS avg_order_value,
     CASE WHEN lifespan=0 THEN 0 ELSE ROUND(total_sales::numeric / lifespan, 2) END AS avg_monthly_spend
 FROM customer_aggregation;
+
+
+

@@ -8,8 +8,10 @@ WITH customer_spending AS (
     SELECT 
         c.customer_key,
         SUM(s.sales_amount) AS total_spending,
-        EXTRACT(YEAR FROM AGE(MAX(s.order_date), MIN(s.order_date))) * 12
-        + EXTRACT(MONTH FROM AGE(MAX(s.order_date), MIN(s.order_date))) AS life_span
+        (EXTRACT(YEAR FROM AGE(MAX(s.order_date), MIN(s.order_date))) * 12
+ + EXTRACT(MONTH FROM AGE(MAX(s.order_date), MIN(s.order_date)))
+ + CASE WHEN EXTRACT(DAY FROM AGE(MAX(s.order_date), MIN(s.order_date))) > 0 THEN 1 ELSE 0 END
+) AS life_span
     FROM gold.fact_sales s
     LEFT JOIN gold.dim_customers c
         ON s.customer_key = c.customer_key
